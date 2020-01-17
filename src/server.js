@@ -6,7 +6,7 @@ const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 // On request to the server, process the route.
 const onRequest = (request, response) => {
-    route(request, response);
+  route(request, response);
 };
 
 // Server.

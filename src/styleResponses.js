@@ -5,13 +5,13 @@ const stylesheet = fs.readFileSync(`${__dirname}/../client/style.css`);
 
 // Get the CSS.
 const getStyle = (request, response) => {
-    response.writeHead(200, {
-        'Content-Type': mimetype.CSS
-    });
-    response.write(stylesheet);
-    response.end();
+  response.writeHead(200, {
+    'Content-Type': mimetype.CSS,
+  });
+  response.write(stylesheet);
+  response.end();
 };
 
-modules.exports = {
-    getStyle
-}
+module.exports = {
+  getStyle,
+};
