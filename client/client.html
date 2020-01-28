@@ -2,12 +2,47 @@
 <html lang="en">
 <head>
   <title>Our simple HTTP server</title>
-  <link rel="stylesheet" type="text/css" href="/style.css">
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
-  <script type="text/babel">
-  
-    //TODO: Handle requests and assign accept headers.
+  <link rel="stylesheet" type="text/css" href="/style.css">  
+
+  <script>
+
+    // Handle the XHRequest response.
+    const handleResponse = (xhr, parseResponse) => {
+      console.log("Handling response from server.");
+      const content = document.querySelector('#content');
+      content.innerHTML = parseResponse;
+    };
+
+    // Send the AJAX request.
+    const sendAjax = (url, acceptedType) => {      
+      // Prepare the request.
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", url);
+      xhr.setRequestHeader("Accept", acceptedType);
+      xhr.onload = () => handleResponse(xhr, xhr.responseText);
+
+      // Send the request.
+      xhr.send();
+    }
+
+    // Prepare the XHRequest.
+    const prepareRequest = () => {
+      const url = document.querySelector("#page").value;
+      const acceptedType = document.querySelector("#type").value;
+
+      console.log(`Create XHRequest to "${url}" with accepted type "${acceptedType}".`);
+      return sendAjax(url, acceptedType);
+    };
+
+    // Initialize the elements.
+    const init = () => {
+      console.log("Starting client.");
+      const contentElement = document.querySelector("#content");
+      const sendButton = document.querySelector("#send");
+      sendButton.addEventListener("click", prepareRequest);
+    };
+
+    window.onload = init;
 
   </script>
 </head>

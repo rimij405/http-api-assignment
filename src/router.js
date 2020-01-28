@@ -18,15 +18,17 @@ const routes = {
 };
 
 // Check for specific accept header.
-const acceptsType = (mimetype, request, response) => {
+const acceptsTypes = (mimetypes, request, response) => {
   return new Promise((resolve, reject) => {
     const accepts = request.headers.accept.split(',');
     for(let i = 0; i < accepts.length; i++){
-      if(accepts[i] === mimetype){
-        resolve(request, response);
+      for(let j = 0; j < mimetypes.length; j++){
+        if(accepts[i] === mimetypes[j]){
+          resolve(request, response);
+        }
       }
     }    
-    reject(`Does not accept ${mimetype}.`);
+    reject(`Does not accept types: ${mimetypes.join(",")}.`);
   });
 };
 
@@ -38,7 +40,7 @@ const route = (request, response) => {
   // Handle the route.
   const handler = routes[path];
 
-  acceptsType('application/json', request, response).then((request, response) => {
+  acceptsTypes(['application/json', 'text/xml'], request, response).then((request, response) => {
     console.log('accepts this');
   }).catch((err) => {
     console.log(err);
