@@ -1,4 +1,4 @@
-const json = {
+const codes = {
   200: {
     message: 'This is a successful response.',
   },
@@ -28,11 +28,4 @@ const json = {
   },
 };
 
-const xml = {
-
-};
-
-module.exports = {
-  json,
-  xml,
-};
+module.exports = codes;
