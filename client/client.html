@@ -2,135 +2,163 @@
 <html lang="en">
 
 <head>
-  <title>Our simple HTTP server</title>
-  <link rel="stylesheet" type="text/css" href="/style.css">
+    <title>Our simple HTTP server</title>
+    <link rel="stylesheet" type="text/css" href="/style.css">
 
-  <script>
+    <script>
 
-    // Map of error IDs.
-    const ErrorID = {
-      'success': "Success",
-      'badRequest': "Bad Request",
-      'forbidden': "Forbidden",
-      'unauthorized': "Unauthorized",
-      'internalError': "Internal Error",
-      'notImplemented': "Not Implemented",
-      'notFound': "Not Found"
-    }
+        // Map of error IDs.
+        const ErrorID = {
+            'success': "Success",
+            'badRequest': "Bad Request",
+            'forbidden': "Forbidden",
+            'unauthorized': "Unauthorized",
+            'internalError': "Internal Error",
+            'notImplemented': "Not Implemented",
+            'notFound': "Not Found"
+        }
 
-    // Clear the element of all children.
-    const clearElement = (target) => {
-      while (target.firstChild) {
-        target.removeChild(target.firstChild);
-      }
-    };
+        // Clear the element of all children.
+        const clearElement = (target) => {
+            while (target.firstChild) {
+                target.removeChild(target.firstChild);
+            }
+        };
 
-    // Display the default value (useful for errors).
-    const displayDefault = (target) => {
-      target.innerHTML = "No response.";
-    };
+        // Display the default value (useful for errors).
+        const displayDefault = (target) => {
+            target.innerHTML = "No response.";
+        };
 
-    // Display the id.
-    const displayID = (target, id, status) => {
-      const value = (status === 200) ? "Success" : ErrorID[id]; 
-      if (value != null) {
-        const heading = document.createElement("h1");
-        heading.innerHTML = value;
-        target.appendChild(heading);
-      }
-    };
+        // Display the id.
+        const displayID = (target, id, status) => {
+            const value = (status === 200) ? "Success" : ErrorID[id];
+            if (value != null) {
+                const heading = document.createElement("h1");
+                heading.innerHTML = value;
+                target.appendChild(heading);
+            }
+        };
 
-    // Display the message.
-    const displayMessage = (target, message) => {
-      const p = document.createElement("p");
-      p.innerHTML = `Message: ${message}`;
-      target.appendChild(p);
-    };
+        // Display the message.
+        const displayMessage = (target, message) => {
+            const p = document.createElement("p");
+            p.innerHTML = `Message: ${message}`;
+            target.appendChild(p);
+        };
 
-    // Handle the JSON response.
-    const handleJSON = (content, response, status) => {
-      // Handle JSON response.
-      if (response != null) {
-        clearElement(content);
-        displayID(content, response.id, status);
-        displayMessage(content, response.message);
-        console.dir(response);
-      } else {
-        displayDefault(content);
-      }
-    }
+        // Handle the JSON response.
+        const handleJSON = (content, json, status) => {
+            // Handle JSON response.
+            if (json != null) {
+                clearElement(content);
+                displayID(content, json.id, status);
+                displayMessage(content, json.message);
+                console.dir(json);
+            } else {
+                displayDefault(content);
+            }
+        }
 
-    const handleXML = (content, response, status) => {
-      // Do nothing.
-    };
+        // Get XML info from element.
+        const getXMLElementValue = (xmlDoc, tag) => {
+            if (xmlDoc != null){
+                const element = xmlDoc.getElementsByTagName(tag)[0];
+                const childNode = (element) ? element.childNodes[0] : null;
+                return (childNode && childNode.nodeValue) ? childNode.nodeValue : null;
+            } else {
+                return null;
+            }
+        };
 
-    // Handle the XHRequest response.
-    const handleResponse = (xhr, parseResponse) => {
-      console.log("Handling response from server.");
-      const content = document.querySelector('#content');
-      const response = {
-        json: JSON.parse(parseResponse),
-        xml: undefined,
-      };
+        // Handle XML response.
+        const handleXML = (content, xmlDoc, status) => {
+            // Handle XML response.
+            if (xmlDoc != null) {
+                clearElement(content);
+                displayID(content, getXMLElementValue(xmlDoc, "id"), status);
+                displayMessage(content, getXMLElementValue(xmlDoc, "message"));
+                console.log(xmlDoc);
+            } else {
+                displayDefault(content);
+            }
+        };
 
-      handleJSON(content, response.json, xhr.status);
-      // handleXML(content, XMLDocument.parse(parseResponse));
-    };
+        // Handle the XHRequest response.
+        const handleResponse = (xhr) => {
+            console.log("Handling response from server.");
+            const content = document.querySelector('#content');
 
-    // Send the AJAX request.
-    const sendAjax = (url, acceptedType) => {
-      // Prepare the request.
-      const xhr = new XMLHttpRequest();
-      xhr.open("GET", url);
-      xhr.setRequestHeader("Accept", acceptedType);
-      xhr.onload = () => handleResponse(xhr, xhr.responseText);
+            // Check the response type.
+            const response = {};
+            try {
+                response.json = JSON.parse(xhr.responseText);
+                handleJSON(content, response.json, xhr.status);
+            } catch (jsonErr) {
+                try {
+                    response.xmlDoc = xhr.responseXML;
+                    handleXML(content, response.xmlDoc, xhr.status);
+                } catch (xmlErr) {
+                    console.dir(jsonErr);
+                    console.dir(xmlErr);
+                }
+            }
+        };
 
-      // Send the request.
-      xhr.send();
-    }
+        // Send the AJAX request.
+        const sendAjax = (url, acceptedType) => {
+            // Prepare the request.
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", url);
+            xhr.setRequestHeader("Accept", acceptedType);
+            xhr.onload = () => handleResponse(xhr);
 
-    // Prepare the XHRequest.
-    const prepareRequest = () => {
-      const url = document.querySelector("#page").value;
-      const acceptedType = document.querySelector("#type").value;
+            // Send the request.
+            xhr.send();
+        }
 
-      console.log(`Create XHRequest to "${url}" with accepted type "${acceptedType}".`);
-      return sendAjax(url, acceptedType);
-    };
+        // Prepare the XHRequest.
+        const prepareRequest = () => {
+            const url = document.querySelector("#page").value;
+            const acceptedType = document.querySelector("#type").value;
 
-    // Initialize the elements.
-    const init = () => {
-      console.log("Starting client.");
-      const contentElement = document.querySelector("#content");
-      const sendButton = document.querySelector("#send");
-      sendButton.addEventListener("click", prepareRequest);
-    };
+            console.log(`Create XHRequest to "${url}" with accepted type "${acceptedType}".`);
+            return sendAjax(url, acceptedType);
+        };
 
-    window.onload = init;
+        // Initialize the elements.
+        const init = () => {
+            console.log("Starting client.");
+            const contentElement = document.querySelector("#content");
+            const sendButton = document.querySelector("#send");
+            sendButton.addEventListener("click", prepareRequest);
+        };
 
-  </script>
+        window.onload = init;
+
+    </script>
 </head>
 
 <body>
-  <section id="top">
-    <h3>Status Code Tests</h3>
-    <select id="page">
-      <option value="/success">Success</option>
-      <option value="/badRequest">Bad Request</option>
-      <option value="/unauthorized">Unauthorized</option>
-      <option value="/forbidden">Forbidden</option>
-      <option value="/internal">Internal</option>
-      <option value="/notImplemented">Not Implemented</option>
-      <option value="/notFound">Not Found</option>
-    </select>
-    <select id="type">
-      <option value="application/json">JSON</option>
-      <option value="text/xml">XML</option>
-    </select>
-    <button id="send">Send</button>
-  </section>
-  <section id="content">
-  </section>
+    <section id="top">
+        <h3>Status Code Tests</h3>
+        <select id="page">
+            <option value="/success">Success</option>
+            <option value="/badRequest">Bad Request</option>
+            <option value="/unauthorized">Unauthorized</option>
+            <option value="/forbidden">Forbidden</option>
+            <option value="/internal">Internal</option>
+            <option value="/notImplemented">Not Implemented</option>
+            <option value="/notFound">Not Found</option>
+        </select>
+        <select id="type">
+            <option value="application/json">JSON</option>
+            <option value="text/xml">XML</option>
+        </select>
+        <button id="send">Send</button>
+    </section>
+    <section id="content">
+    </section>
 </body>
 
 </html>
